@@ -1,6 +1,7 @@
 # gestaltface ensembles and routing
 
 Setup via `uv sync` and `uv run pytest`.
+Render docs (assuming [quarto] installed): `quarto render docs`, preview: `quarto preview docs`.
 
 
 >  For a given cost or latency, what’s the best accuracy anyone can reach — and which method and combination of models gets there?
@@ -27,3 +28,4 @@ ScreamingFace is ready.
 ```
 
 [docs]: https://docs.screamingface.ai/
+[quarto]: https://quarto.org/

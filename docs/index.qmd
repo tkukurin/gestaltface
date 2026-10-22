@@ -1,0 +1,155 @@
+---
+title: "Local LM Studio Evaluation"
+subtitle: "Evaluating local model candidates and multi-pass chains with ScreamingFace"
+date: last-modified
+author: "Gestaltface"
+format:
+  html:
+    toc: true
+    number-sections: true
+    code-tools: true
+---
+
+## Overview
+
+This report documents the local evaluation pipeline from [`xp/lmstudio_eval.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/lmstudio_eval.py). It connects a local [LM Studio](https://lmstudio.ai/) inference server (`http://127.0.0.1:1234/v1`) with the [ScreamingFace](https://screamingface.ai/) evaluation runtime to benchmark local models and compound pipelines on tasks such as `medxpert`.
+
+## Environment & Server Setup
+
+Before running evaluations, ensure both the LM Studio server and ScreamingFace local stack are running:
+
+```bash
+# Terminal 1: ScreamingFace local runtime
+screamingface prepare medxpert
+screamingface up
+```
+
+Export the gateway and engine endpoints if not using default ports:
+
+```bash
+export SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108
+export SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106
+```
+
+## Model Discovery & Selection
+
+The script discovers local models exposed through the ScreamingFace overlay (`local/*` prefix) and automatically picks the target model using fuzzy matching:
+
+```python
+#| eval: false
+import screamingface as sf
+import screamingface._environment
+from tk.r.openmined import common as clib
+
+screamingface._environment.ipykernel_loaded = lambda: False
+if hasattr(sf.report.Report, "_ipython_display_"):
+    del sf.report.Report._ipython_display_
+
+print(f"screamingface {sf.__version__} ready.")
+
+# Discover models mirrored from LM Studio (http://127.0.0.1:1234/v1/models)
+local_models = [m.id for m in sf.models.list() if m.id.startswith("local/")]
+assert local_models, "expect lmstudio + ScreamingFace w/ AIGW_LOCAL_ENABLED=true."
+
+ACTIVE_MODEL = "local/google/gemma-4-e4b"
+closest = clib.closestname(ACTIVE_MODEL, local_models)
+ACTIVE_MODEL = closest[0]
+print(f"Using active model: {ACTIVE_MODEL}")
+```
+
+## Candidate Architectures
+
+We define two candidate approaches to compare single-model generation against multi-pass refinement:
+
+### Recipe 1: Solo Local Model
+
+Direct generation using the selected local model:
+
+```python
+#| eval: false
+solo = sf.Model(ACTIVE_MODEL, name="solo-local")
+```
+
+### Recipe 2: Two-Pass Self-Refinement Chain
+
+A pipeline where the first pass drafts an initial answer, and a second pass reviews and verifies it:
+
+```python
+#| eval: false
+chain = sf.Pipeline(
+    [
+        sf.Model(ACTIVE_MODEL, name="draft"),
+        sf.Model(
+            ACTIVE_MODEL,
+            prompt="Review and verify this medical answer:\n\n{context}\n\nFinal answer:",
+        ),
+    ],
+    name="local-refine-chain",
+)
+```
+
+## Benchmark Execution
+
+Evaluations are triggered via `sf.evaluate`:
+
+```python
+#| eval: false
+BENCHMARK = "medxpert"
+LIMIT = 1
+
+candidates = [solo]  # Add `chain` to benchmark multi-pass refinement
+
+print(f"Running evaluation on {BENCHMARK=} (limit={LIMIT})...")
+report = sf.evaluate(candidates, benchmark=BENCHMARK, limit=LIMIT)
+```
+
+## Results & Output Inspection
+
+The benchmark outputs candidate scores, costs, and individual test cases:
+
+```python
+#| eval: false
+print("\n" + "=" * 60)
+print(f"{'Candidate':<30} | {'Score':^10} | {'Cost':^12}")
+print("-" * 60)
+for c in report.candidates:
+    score = f"{c.score:.3f}" if c.score is not None else "N/A"
+    cost = "$0.00 (local)"
+    print(f"{c.name:<30} | {score:^10} | {cost:^12}")
+print("=" * 60)
+
+for candidate in report.candidates:
+    print(f"\nOutputs for {candidate.name}:")
+    for case in candidate.cases:
+        score = case.grade.score if case.grade else 0.0
+        status = "PASS" if score and score > 0 else "FAIL"
+        clean_output = (case.output or "").strip().replace("\n", " ")[:120]
+        print(f"  [Case {case.case_id}] {status} (score={score}): {clean_output}...")
+```
+
+### Sample Output
+
+```text
+============================================================
+Candidate                      |   Score    |     Cost
+------------------------------------------------------------
+solo-local                     |   0.000    | $0.00 (local)
+============================================================
+
+Outputs for solo-local:
+  [Case 1] FAIL (score=0.0): The correct answer is **(H)**...
+```
+
+## Reproducing Locally
+
+Run the experiment directly with `uv`:
+
+```bash
+uv run python xp/lmstudio_eval.py
+```
+
+To re-render this Quarto documentation:
+
+```bash
+quarto render docs
+```

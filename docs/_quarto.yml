@@ -1,0 +1,18 @@
+project:
+  type: website
+  output-dir: .
+
+website:
+  title: "Gestaltface"
+  site-url: "https://tkukurin.github.io/gestaltface/"
+  navbar:
+    title: "Gestaltface"
+    left:
+      - text: "LM Studio Eval"
+        file: index.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-copy: true

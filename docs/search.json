@@ -1,0 +1,58 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Local LM Studio Evaluation",
+    "section": "",
+    "text": "This report documents the local evaluation pipeline from xp/lmstudio_eval.py. It connects a local LM Studio inference server (http://127.0.0.1:1234/v1) with the ScreamingFace evaluation runtime to benchmark local models and compound pipelines on tasks such as medxpert."
+  },
+  {
+    "objectID": "index.html#overview",
+    "href": "index.html#overview",
+    "title": "Local LM Studio Evaluation",
+    "section": "",
+    "text": "This report documents the local evaluation pipeline from xp/lmstudio_eval.py. It connects a local LM Studio inference server (http://127.0.0.1:1234/v1) with the ScreamingFace evaluation runtime to benchmark local models and compound pipelines on tasks such as medxpert."
+  },
+  {
+    "objectID": "index.html#environment-server-setup",
+    "href": "index.html#environment-server-setup",
+    "title": "Local LM Studio Evaluation",
+    "section": "2 Environment & Server Setup",
+    "text": "2 Environment & Server Setup\nBefore running evaluations, ensure both the LM Studio server and ScreamingFace local stack are running:\n# Terminal 1: ScreamingFace local runtime\nscreamingface prepare medxpert\nscreamingface up\nExport the gateway and engine endpoints if not using default ports:\nexport SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108\nexport SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106"
+  },
+  {
+    "objectID": "index.html#model-discovery-selection",
+    "href": "index.html#model-discovery-selection",
+    "title": "Local LM Studio Evaluation",
+    "section": "3 Model Discovery & Selection",
+    "text": "3 Model Discovery & Selection\nThe script discovers local models exposed through the ScreamingFace overlay (local/* prefix) and automatically picks the target model using fuzzy matching:\n#| eval: false\nimport screamingface as sf\nimport screamingface._environment\nfrom tk.r.openmined import common as clib\n\nscreamingface._environment.ipykernel_loaded = lambda: False\nif hasattr(sf.report.Report, \"_ipython_display_\"):\n    del sf.report.Report._ipython_display_\n\nprint(f\"screamingface {sf.__version__} ready.\")\n\n# Discover models mirrored from LM Studio (http://127.0.0.1:1234/v1/models)\nlocal_models = [m.id for m in sf.models.list() if m.id.startswith(\"local/\")]\nassert local_models, \"expect lmstudio + ScreamingFace w/ AIGW_LOCAL_ENABLED=true.\"\n\nACTIVE_MODEL = \"local/google/gemma-4-e4b\"\nclosest = clib.closestname(ACTIVE_MODEL, local_models)\nACTIVE_MODEL = closest[0]\nprint(f\"Using active model: {ACTIVE_MODEL}\")"
+  },
+  {
+    "objectID": "index.html#candidate-architectures",
+    "href": "index.html#candidate-architectures",
+    "title": "Local LM Studio Evaluation",
+    "section": "4 Candidate Architectures",
+    "text": "4 Candidate Architectures\nWe define two candidate approaches to compare single-model generation against multi-pass refinement:\n\n4.1 Recipe 1: Solo Local Model\nDirect generation using the selected local model:\n#| eval: false\nsolo = sf.Model(ACTIVE_MODEL, name=\"solo-local\")\n\n\n4.2 Recipe 2: Two-Pass Self-Refinement Chain\nA pipeline where the first pass drafts an initial answer, and a second pass reviews and verifies it:\n#| eval: false\nchain = sf.Pipeline(\n    [\n        sf.Model(ACTIVE_MODEL, name=\"draft\"),\n        sf.Model(\n            ACTIVE_MODEL,\n            prompt=\"Review and verify this medical answer:\\n\\n{context}\\n\\nFinal answer:\",\n        ),\n    ],\n    name=\"local-refine-chain\",\n)"
+  },
+  {
+    "objectID": "index.html#benchmark-execution",
+    "href": "index.html#benchmark-execution",
+    "title": "Local LM Studio Evaluation",
+    "section": "5 Benchmark Execution",
+    "text": "5 Benchmark Execution\nEvaluations are triggered via sf.evaluate:\n#| eval: false\nBENCHMARK = \"medxpert\"\nLIMIT = 1\n\ncandidates = [solo]  # Add `chain` to benchmark multi-pass refinement\n\nprint(f\"Running evaluation on {BENCHMARK=} (limit={LIMIT})...\")\nreport = sf.evaluate(candidates, benchmark=BENCHMARK, limit=LIMIT)"
+  },
+  {
+    "objectID": "index.html#results-output-inspection",
+    "href": "index.html#results-output-inspection",
+    "title": "Local LM Studio Evaluation",
+    "section": "6 Results & Output Inspection",
+    "text": "6 Results & Output Inspection\nThe benchmark outputs candidate scores, costs, and individual test cases:\n#| eval: false\nprint(\"\\n\" + \"=\" * 60)\nprint(f\"{'Candidate':&lt;30} | {'Score':^10} | {'Cost':^12}\")\nprint(\"-\" * 60)\nfor c in report.candidates:\n    score = f\"{c.score:.3f}\" if c.score is not None else \"N/A\"\n    cost = \"$0.00 (local)\"\n    print(f\"{c.name:&lt;30} | {score:^10} | {cost:^12}\")\nprint(\"=\" * 60)\n\nfor candidate in report.candidates:\n    print(f\"\\nOutputs for {candidate.name}:\")\n    for case in candidate.cases:\n        score = case.grade.score if case.grade else 0.0\n        status = \"PASS\" if score and score &gt; 0 else \"FAIL\"\n        clean_output = (case.output or \"\").strip().replace(\"\\n\", \" \")[:120]\n        print(f\"  [Case {case.case_id}] {status} (score={score}): {clean_output}...\")\n\n6.1 Sample Output\n============================================================\nCandidate                      |   Score    |     Cost\n------------------------------------------------------------\nsolo-local                     |   0.000    | $0.00 (local)\n============================================================\n\nOutputs for solo-local:\n  [Case 1] FAIL (score=0.0): The correct answer is **(H)**..."
+  },
+  {
+    "objectID": "index.html#reproducing-locally",
+    "href": "index.html#reproducing-locally",
+    "title": "Local LM Studio Evaluation",
+    "section": "7 Reproducing Locally",
+    "text": "7 Reproducing Locally\nRun the experiment directly with uv:\nuv run python xp/lmstudio_eval.py\nTo re-render this Quarto documentation:\nquarto render docs"
+  }
+]

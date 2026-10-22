@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tk.r.openmined"
+version = "0.1.0"
+description = "model ensembles"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"  # pin for google deps google-re2
+dependencies = [
+    "matplotlib",
+    # runtime to locally run the eval server
+    "screamingface[notebook,runtime]>=0.1.2",
+    "routellm",
+    "sentence-transformers",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "jupytext",
+    "ipykernel",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tk"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["src"]
+python_files = ["*.py"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
+
+# NOTE(2026-10):
+# screamface hardcodes `version = "0.1.2"` in git main and only stamps release versions
+# (e.g. 0.1.6+) dynamically in PyPI CI workflows. `sf.__version__` reports 0.1.2
+# even though this pulls the latest commit from GitHub main.
+[tool.uv.sources]
+screamingface = { git = "https://github.com/ScreamingFace/screamingface", subdirectory = "packages/screamingface" }

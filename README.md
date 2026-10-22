@@ -1,0 +1,29 @@
+# gestaltface ensembles and routing
+
+Setup via `uv sync` and `uv run pytest`.
+
+
+>  For a given cost or latency, what’s the best accuracy anyone can reach — and which method and combination of models gets there?
+
+## tk notes
+
+ScreamingFace client v0.1.2 quickly changing, seems some [docs] are outdated
+
+* had to add `screamingface[runtime]`
+* for that `google-re2` not available `python3.15`
+
+```
+# https://docs.screamingface.ai/learn/engine
+$ screamingface prepare medxpert  # draco not ready?
+$ screamingface up
+ScreamingFace is ready.
+  gateway db=sqlite:///Users/toni.kukurin/.screamingface/aigateway.sqlite3 · request_cache=off
+  Gateway    http://127.0.0.1:9105
+  Scoreboard http://127.0.0.1:9106
+  Engine     http://127.0.0.1:9108
+  Logs       /Users/toni.kukurin/.screamingface/runtime.log
+  export SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108
+  export SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106
+```
+
+[docs]: https://docs.screamingface.ai/

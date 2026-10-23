@@ -1,15 +1,28 @@
-"""run free openrouter
+r"""run free openrouter
 
 Setup:
   # (if you get a missing-benchmark-assets)
   uv run screamingface prepare medxpert
 
-  # Terminal 1: expose the named free variants at the existing Gateway.
-  AIGW_OPENROUTER_DEFAULT_MODELS='["openrouter/liquid/lfm-2.5-2.6b:free","openrouter/google/gemma-4-31b-it:free"]' uv run screamingface restart
+  # Terminal 1: `restart` or `up` if not running
+  AIGW_OPENROUTER_DEFAULT_MODELS='[
+    "openrouter/liquid/lfm-2.5-2.6b:free",
+    "openrouter/google/gemma-4-31b-it:free"
+  ]' \
+    uv run screamingface restart
 
-  # Terminal 2, from the project root; leave this Engine running for the notebook.
-  # The standard launcher cannot load the extra Gemma route, so use a separate Engine.
-  URL4_RUNNER_CONFIG=xp/gemma-free.toml URL4_BENCHMARK_ASSETS=/Users/toni.kukurin/.screamingface/benchmark-assets uv run uvicorn screamingface_engine.local:create_local_app --factory --host 127.0.0.1 --port 9109
+  # up/restart supply benchmark assets automatically for the normal Engine (9108).
+  # The normal launcher has no custom runner-config option.
+  # Gemma needs an extra route: run this Engine (9109) from the project root.
+  # Supply the existing questions/answer-key directory; keep ~ unquoted.
+  URL4_RUNNER_CONFIG=xp/gemma-free.toml \
+  URL4_BENCHMARK_ASSETS=~/.screamingface/benchmark-assets \
+    uv run uvicorn \
+      screamingface_engine.local:create_local_app \
+      --factory --host 127.0.0.1 --port 9109
+
+  # LFM-only alternative: normal up/restart, configure Engine 9108, use LFM's ~free route.
+  # See README.md. Leave the standalone Engine terminal running when testing Gemma.
 """
 # %%
 import httpx

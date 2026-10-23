@@ -33,8 +33,9 @@ ScreamingFace is ready.
   export SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108
   export SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106
 
-# to update models
-$ AIGW_OPENROUTER_DEFAULT_MODELS='["openrouter/liquid/lfm-2.5-2.6b:free"]' uv run screamingface restart
+# apply changed Gateway model settings (use up for a stopped stack)
+$ AIGW_OPENROUTER_DEFAULT_MODELS='["openrouter/liquid/lfm-2.5-2.6b:free"]' \
+    uv run screamingface restart
 ScreamingFace stopped.
 ScreamingFace is ready.
   gateway db=sqlite:///path/to/.screamingface/aigateway.sqlite3 · request_cache=on
@@ -46,5 +47,17 @@ ScreamingFace is ready.
   export SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106
 ```
 
+`up` starts the stack; `restart` applies changed settings. Both set
+`URL4_BENCHMARK_ASSETS` automatically: the prepared questions/answer-key directory,
+normally `~/.screamingface/benchmark-assets`. No extra download is needed.
+
+When launching an Engine manually, set `URL4_BENCHMARK_ASSETS` to the prepared
+data directory; the [local loader][assets] otherwise installs no benchmarks.
+Keep `~` unquoted in shell assignments so it expands before Python reads it.
+
+OpenRouter/Gateway IDs use `:free`; ScreamingFace routes use `~free`.
+Gateway model settings and Engine route declarations are separate.
+
 [docs]: https://docs.screamingface.ai/
 [quarto]: https://quarto.org/
+[assets]: screamingface/apps/screamingface-engine/src/screamingface_engine/local.py#L166-L180

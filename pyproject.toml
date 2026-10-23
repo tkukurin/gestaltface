@@ -11,7 +11,7 @@ requires-python = ">=3.12,<3.15"  # pin for google deps google-re2
 dependencies = [
     "matplotlib",
     # runtime to locally run the eval server
-    "screamingface[notebook,runtime]>=0.1.2",
+    "screamingface[notebook,runtime,inspect]>=0.1.2",
     "routellm",
     "sentence-transformers",
 ]
@@ -42,3 +42,15 @@ extraPaths = ["src"]
 # even though this pulls the latest commit from GitHub main.
 [tool.uv.sources]
 screamingface = { git = "https://github.com/ScreamingFace/screamingface", subdirectory = "packages/screamingface" }
+
+[tool.uv]
+# NOTE(tk) hack
+# Why this works: In practice, inspect-ai rarely breaks on minor/patch bumps of boto3, so forcing boto3 to satisfy LiteLLM almost always runs fine at runtime.
+override-dependencies = [
+    # option 1: pin to matching version
+    # "boto3<=1.42.99",
+    # "botocore<=1.42.99",
+
+    # option 2 (more haxxor): point aioboto3 to a dummy/empty package
+    "aioboto3; extra == 'nonexistent_extra_never_used'",
+]

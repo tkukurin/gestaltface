@@ -4,8 +4,12 @@ Setup:
   # (if you get a missing-benchmark-assets)
   uv run screamingface prepare medxpert
 
-  # (start or restart, choose-your-model)
-  AIGW_OPENROUTER_DEFAULT_MODELS='["openrouter/liquid/lfm-2.5-2.6b:free"]' uv run screamingface restart
+  # Terminal 1: expose the named free variants at the existing Gateway.
+  AIGW_OPENROUTER_DEFAULT_MODELS='["openrouter/liquid/lfm-2.5-2.6b:free","openrouter/google/gemma-4-31b-it:free"]' uv run screamingface restart
+
+  # Terminal 2, from the project root; leave this Engine running for the notebook.
+  # The standard launcher cannot load the extra Gemma route, so use a separate Engine.
+  URL4_RUNNER_CONFIG=xp/gemma-free.toml URL4_BENCHMARK_ASSETS=/Users/toni.kukurin/.screamingface/benchmark-assets uv run uvicorn screamingface_engine.local:create_local_app --factory --host 127.0.0.1 --port 9109
 """
 # %%
 import httpx
@@ -13,7 +17,7 @@ import screamingface as sf
 import screamingface._environment
 print('(zed editor) use live text logs instead of ipywidgets')
 screamingface._environment.ipykernel_loaded = lambda: False
-cfg = sf.configure(engine_url="http://127.0.0.1:9108", scoreboard_url="http://127.0.0.1:9106")
+cfg = sf.configure(engine_url="http://127.0.0.1:9109", scoreboard_url="http://127.0.0.1:9106")
 # %%
 # Public OpenRouter catalogue: no API key, Engine call, or inference required.
 print("Fetching OpenRouter's public model catalogue...", flush=True)
@@ -67,17 +71,17 @@ or_models = [m.id for m in sf.models.list() if m.id.startswith('openrouter/')]
 print(f'{len(or_models)} OpenRouter models exposed by this Engine')
 print('Engine free routes:', [m for m in or_models if m.endswith('~free')])
 # %%
-assert (model := "openrouter/liquid/lfm-2.5-2.6b~free") in or_models, (
-    f"{model=} not exposed: {or_models=}\n"
-    f"AIGW_OPENROUTER_DEFAULT_MODELS='[\"{model}\"]' "
-    "uv run screamingface restart"
+assert (model := "openrouter/google/gemma-4-31b-it~free") in or_models, (
+    f"{model=} not exposed by the Engine on port 9109.\n"
+    "Run BOTH setup commands in this file's docstring, then re-run the catalogue cell."
 )
 # %%
 recipe = sf.Model(
     model,
-    name="lfm-solo",
-    # NOTE limited on purpose for this eval, just a test
-    params={"temperature": 0.7, "max_tokens": 1024},
+    name="gemma-free-solo",
+    prompt="Answer directly, without explanation, in the exact final-answer format requested by the question.",
+    # Reasoning can exhaust the output cap before producing any answer text.
+    params={"temperature": 0.0, "max_tokens": 4096, "reasoning.effort": "none"},
 )
 fusion = sf.Fusion([recipe], synthesizer=recipe, name="free-test")
 
@@ -90,3 +94,6 @@ report = sf.evaluate(recipe, benchmark="medxpert", limit=1, progress=True)
 print(report.usage)
 # %%
 print((cand := report.candidates.only).url4)
+print("Score:", cand.score)
+for case in cand.cases:
+    print("Output:", case.output)

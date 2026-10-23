@@ -1,0 +1,7 @@
+[aigateway]
+base_url = "http://127.0.0.1:9105"
+default_route = "/openrouter/google/gemma-4-31b-it~free"
+
+[[aigateway.models]]
+id = "openrouter/google/gemma-4-31b-it~free"
+web_search = false

@@ -11,9 +11,11 @@ requires-python = ">=3.12,<3.15"  # pin for google deps google-re2
 dependencies = [
     "matplotlib",
     # runtime to locally run the eval server
-    "screamingface[notebook,runtime,inspect]>=0.1.2",
+    "screamingface[notebook,runtime,inspect]", #>=0.1.2",
+    "screamingface-engine[inspect]",
     "routellm",
     "sentence-transformers",
+    # "inspect-evals>=0.25.0",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +44,7 @@ extraPaths = ["src"]
 # even though this pulls the latest commit from GitHub main.
 [tool.uv.sources]
 screamingface = { git = "https://github.com/ScreamingFace/screamingface", subdirectory = "packages/screamingface" }
+screamingface-engine = { git = "https://github.com/ScreamingFace/screamingface", subdirectory = "apps/screamingface-engine" }
 
 [tool.uv]
 # NOTE(tk) hack
@@ -53,4 +56,7 @@ override-dependencies = [
 
     # option 2 (more haxxor): point aioboto3 to a dummy/empty package
     "aioboto3; extra == 'nonexistent_extra_never_used'",
+
+    # for both engine and the inspect dependency of screamingface
+    "datasets>=5.0.1,<6.0.0",
 ]

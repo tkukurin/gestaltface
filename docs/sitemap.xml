@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://tkukurin.github.io/gestaltface/lmstudio.html</loc>
+    <lastmod>2026-10-23T20:47:26.778Z</lastmod>
+  </url>
+  <url>
     <loc>https://tkukurin.github.io/gestaltface/index.html</loc>
-    <lastmod>2026-10-22T14:46:44.450Z</lastmod>
+    <lastmod>2026-10-23T20:47:26.575Z</lastmod>
+  </url>
+  <url>
+    <loc>https://tkukurin.github.io/gestaltface/experiments.html</loc>
+    <lastmod>2026-10-23T20:47:26.767Z</lastmod>
   </url>
 </urlset>

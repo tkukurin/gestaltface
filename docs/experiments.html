@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Experiment Guide – Gestaltface</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6a2b564723c042b0e428f357d9a015bd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Gestaltface</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Overview</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./experiments.html" aria-current="page"> 
+<span class="menu-text">Experiments</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./lmstudio.html"> 
+<span class="menu-text">LM Studio Eval</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#experiment-inventory" id="toc-experiment-inventory" class="nav-link active" data-scroll-target="#experiment-inventory">Experiment inventory</a></li>
+  <li><a href="#environment-and-runtime" id="toc-environment-and-runtime" class="nav-link" data-scroll-target="#environment-and-runtime">Environment and runtime</a></li>
+  <li><a href="#inspect-a-plan-without-evaluating" id="toc-inspect-a-plan-without-evaluating" class="nav-link" data-scroll-target="#inspect-a-plan-without-evaluating">Inspect a plan without evaluating</a></li>
+  <li><a href="#collect-and-analyze" id="toc-collect-and-analyze" class="nav-link" data-scroll-target="#collect-and-analyze">Collect and analyze</a>
+  <ul class="collapse">
+  <li><a href="#cost-interpretation" id="toc-cost-interpretation" class="nav-link" data-scroll-target="#cost-interpretation">Cost interpretation</a></li>
+  </ul></li>
+  <li><a href="#p7-token-logprob-research" id="toc-p7-token-logprob-research" class="nav-link" data-scroll-target="#p7-token-logprob-research">P7 token-logprob research</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Experiment Guide</h1>
+<p class="subtitle lead">Current implementations, safe previews, and saved-result analysis</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="experiment-inventory" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-inventory">Experiment inventory</h2>
+<p>The numbered studies are independent collectors, not a pipeline that must be run in order. Source links below point to the repository; new local scripts must also be committed before those links are available on GitHub.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Study</th>
+<th style="text-align: left;">Source</th>
+<th style="text-align: left;">Implemented comparison</th>
+<th style="text-align: left;">Important qualification</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">P1: MoA vs Self-MoA</td>
+<td style="text-align: left;"><a href="https://github.com/tkukurin/gestaltface/blob/main/xp/2610_moa_vs_selfmoa.py"><code>2610_moa_vs_selfmoa.py</code></a></td>
+<td style="text-align: left;">Solo models, repeated-sample voting, and mixed-model voting; optional single- and two-layer synthesis.</td>
+<td style="text-align: left;">Default runs voting baselines only. Add <code>--fusion</code> for MoA/Self-MoA; <code>--no-layered</code> skips two-layer MoA. “Best” is the configured frontier model, and “equal-spend” pairs are nearest-cost comparisons, not strictly matched budgets.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P2: cascade signals</td>
+<td style="text-align: left;"><a href="https://github.com/tkukurin/gestaltface/blob/main/xp/2610_cascade_signals.py"><code>2610_cascade_signals.py</code></a></td>
+<td style="text-align: left;">Stage solos, confidence-prompt controls, cheap voting, then offline confidence/agreement cascades and optional frozen routers.</td>
+<td style="text-align: left;">Routing is replayed over cached answers. Signals are verbalized confidence, self-agreement, and cross-model agreement, not token logprobs. Thresholds use a dev split, but the accuracy target uses held-out frontier accuracy.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P3: voting curves</td>
+<td style="text-align: left;"><a href="https://github.com/tkukurin/gestaltface/blob/main/xp/p3_voting_curves.py"><code>p3_voting_curves.py</code></a></td>
+<td style="text-align: left;">Seeded samples, simulated plurality curves, difficulty slices, adaptive stopping, and live votes at N=3 and N=9.</td>
+<td style="text-align: left;">Reports tables, not a plot. Resampling bands reflect available seeds rather than question-level uncertainty. Model support for seeded sampling must be checked.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P4: RouteLLM transfer</td>
+<td style="text-align: left;"><a href="https://github.com/tkukurin/gestaltface/blob/main/xp/p4_routellm_transfer.py"><code>p4_routellm_transfer.py</code></a></td>
+<td style="text-align: left;">Strong/weak solos with frozen-router threshold sweeps, APGR, and an oracle comparison.</td>
+<td style="text-align: left;">Offline replay; consumes its own <code>strong</code>/<code>weak</code> candidates, not P2’s stage-named outputs.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P5: kNN routing robustness</td>
+<td style="text-align: left;"><a href="https://github.com/tkukurin/gestaltface/blob/main/xp/p5_knn_routing_robustness.py"><code>p5_knn_routing_robustness.py</code></a></td>
+<td style="text-align: left;">Multi-model, multi-benchmark collection, kNN routing, leave-one-benchmark-out transfer, and paraphrase stability.</td>
+<td style="text-align: left;">Multiple benchmarks are needed for out-of-domain analysis. The in-domain split pools benchmark-qualified question IDs; paraphrase stability includes training and test IDs.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P6: multimodal routing</td>
+<td style="text-align: left;"><a href="https://github.com/tkukurin/gestaltface/blob/main/xp/p6_multimodal_routing.py"><code>p6_multimodal_routing.py</code></a></td>
+<td style="text-align: left;">Vision solos, voting, describe-then-reason, and offline routing by image type.</td>
+<td style="text-align: left;">Prototype: <code>inspect-mmmu</code> is a placeholder, not a verified available benchmark. A real image benchmark and image-capable routes are prerequisites.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P7: confidence-filtered voting</td>
+<td style="text-align: left;"><a href="https://github.com/tkukurin/gestaltface/blob/main/xp/p7_confidence_filtered_vote.py"><code>p7_confidence_filtered_vote.py</code></a></td>
+<td style="text-align: left;">External token-logprob collection and DeepConf-style analysis; separate ScreamingFace verbalized-confidence proxy.</td>
+<td style="text-align: left;">The proxy is not token-logprob DeepConf. External collection is research-only, not a ScreamingFace leaderboard result.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="environment-and-runtime" class="level2">
+<h2 class="anchored" data-anchor-id="environment-and-runtime">Environment and runtime</h2>
+<p>Run commands from the repository root so exports land in the expected <code>results/</code> directory. Install the project dependencies first:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync <span class="at">--extra</span> dev</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Python must satisfy the range in <code>pyproject.toml</code> (currently <code>&gt;=3.12,&lt;3.15</code>). Model routes, token limits, and cost assumptions live in <a href="https://github.com/tkukurin/gestaltface/blob/main/src/tk/r/openmined/common.py"><code>src/tk/r/openmined/common.py</code></a>. Confirm that your Engine serves the selected routes and benchmark before a live run; the scripts check these before evaluation.</p>
+<p>For the normal local runtime, prepare the intended benchmark and start the stack. For example, P1’s default benchmark can be prepared with:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python <span class="at">-m</span> screamingface_engine.benchmarks.prepare <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> ~/.screamingface/benchmark-assets <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bundle</span> inspect-lab_bench_litqa</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run screamingface up</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If the stack is already running, use <code>uv run screamingface restart</code> to apply changed Gateway settings. The normal launcher supplies the prepared benchmark assets to the Engine. Set the SDK endpoints in the shell used for experiments:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SCREAMINGFACE_ENGINE_URL</span><span class="op">=</span>http://127.0.0.1:9108</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SCREAMINGFACE_SCOREBOARD_URL</span><span class="op">=</span>http://127.0.0.1:9106</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remote routes need a connected provider and valid credentials. <strong>Live runs send benchmark prompts to the selected providers and can incur charges.</strong> Keep API keys out of source files and published reports. Prepared benchmarks, served routes, free-model availability, and provider parameter support can change independently of these scripts.</p>
+<p>P1 and P2 support <code>--free</code>, but the normal Engine does not necessarily declare both free routes. The custom configuration is <a href="https://github.com/tkukurin/gestaltface/blob/main/xp/gemma-free.toml"><code>xp/gemma-free.toml</code></a>; the setup notes at the top of <a href="https://github.com/tkukurin/gestaltface/blob/main/xp/tktest.py"><code>xp/tktest.py</code></a> describe a separate Engine on port <strong>9109</strong>. Gateway model IDs use <code>:free</code>, while Engine route IDs use <code>~free</code>. Do not run <code>tktest.py</code> as a setup command: its top-level code makes network calls and evaluates a model.</p>
+</section>
+<section id="inspect-a-plan-without-evaluating" class="level2">
+<h2 class="anchored" data-anchor-id="inspect-a-plan-without-evaluating">Inspect a plan without evaluating</h2>
+<p>These commands take the dry-run branches, which do not contact the Engine or run inference. Cost estimates are rough planning aids, not spend caps. Dry-run success does not verify that a route or benchmark exists.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/2610_moa_vs_selfmoa.py <span class="at">--benchmark</span> inspect-lab_bench_litqa <span class="at">--limit</span> 5 <span class="at">--k</span> 3 <span class="at">--fusion</span> <span class="at">--dry-run</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/2610_cascade_signals.py <span class="at">--benchmark</span> inspect-mmlu_pro <span class="at">--limit</span> 5 <span class="at">--dry-run</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p3_voting_curves.py <span class="at">--benchmark</span> inspect-mmlu_pro <span class="at">--limit</span> 5 <span class="at">--tiers</span> cheap frontier <span class="at">--dry-run</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p4_routellm_transfer.py <span class="at">--benchmark</span> inspect-mmlu_pro <span class="at">--limit</span> 5 <span class="at">--routers</span> bert random <span class="at">--dry-run</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p5_knn_routing_robustness.py <span class="at">--limit</span> 5 <span class="at">--paraphrase-limit</span> 5 <span class="at">--dry-run</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p6_multimodal_routing.py <span class="at">--dry-run</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p7_confidence_filtered_vote.py proxy <span class="at">--benchmark</span> inspect-aime25 <span class="at">--n</span> 8 <span class="at">--threshold</span> 0.6 <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>P6 remains a plan preview until its benchmark and routes are verified. P7’s proxy has no <code>--limit</code> option; removing its <code>--dry-run</code> can evaluate the full benchmark. The parsers use <code>parse_known_args()</code>, so an unsupported option may be silently ignored rather than rejected.</p>
+</section>
+<section id="collect-and-analyze" class="level2">
+<h2 class="anchored" data-anchor-id="collect-and-analyze">Collect and analyze</h2>
+<p>After checking the plan and runtime, explicitly remove <code>--dry-run</code> to collect. For example, a small P1 run with synthesis enabled is:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/2610_moa_vs_selfmoa.py <span class="at">--benchmark</span> inspect-lab_bench_litqa <span class="at">--limit</span> 5 <span class="at">--k</span> 3 <span class="at">--fusion</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Shared collection exports both a full report and per-case rows:</p>
+<ul>
+<li><code>results/&lt;tag&gt;.report.json</code>: the ScreamingFace report.</li>
+<li><code>results/&lt;tag&gt;.csv</code>: candidate, case ID, score, generation cost, output, input, and abstention status.</li>
+</ul>
+<p>Tags start with <code>p1_</code> through <code>p6_</code>, or <code>p7_proxy_</code>, and include the benchmark. These filenames are deterministic: repeating a run with the same tag overwrites its exports. Archive artifacts before rerunning a configuration you want to retain. Partially failed evaluations preserve the candidates that completed when ScreamingFace returns a partial report; a saved file alone does not establish a complete comparison.</p>
+<p>P1–P6 support <code>--analyze</code> for their own saved CSVs. Quote globs so the script expands them, and keep input files benchmark-specific unless intentionally doing P5’s cross-benchmark analysis:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/2610_moa_vs_selfmoa.py <span class="at">--analyze</span> <span class="st">"results/p1_inspect-lab_bench_litqa*.csv"</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/2610_cascade_signals.py <span class="at">--benchmark</span> inspect-mmlu_pro <span class="at">--analyze</span> <span class="st">"results/p2_inspect-mmlu_pro*.csv"</span> <span class="at">--routers</span> bert random</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p4_routellm_transfer.py <span class="at">--benchmark</span> inspect-mmlu_pro <span class="at">--analyze</span> <span class="st">"results/p4_inspect-mmlu_pro*.csv"</span> <span class="at">--routers</span> bert random</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p5_knn_routing_robustness.py <span class="at">--analyze</span> <span class="st">"results/p5_*.csv"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Preserve relevant collection options such as <code>--numeric</code> and <code>--models</code> when analyzing. Router analysis may download checkpoints, and P5 may download sentence-transformer weights. RouteLLM’s <code>mf</code> router additionally needs <code>OPENAI_API_KEY</code> for embeddings; cached-answer analysis is not necessarily network-free.</p>
+<section id="cost-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="cost-interpretation">Cost interpretation</h3>
+<p>The shared exporter excludes grading from generation cost and keeps unknown costs as unknown. For configured routes, a zero-dollar call with known token usage (such as a free route or cache hit) is repriced using <code>PRICES</code> to estimate cold-call cost. Consequently, plotted cost is not necessarily the amount billed. See <code>common.py</code> for the current rates and extraction rules.</p>
+<p>The scripts do not provide a complete end-to-end latency accounting protocol. Do not interpret offline cost curves as measured serving latency.</p>
+</section>
+</section>
+<section id="p7-token-logprob-research" class="level2">
+<h2 class="anchored" data-anchor-id="p7-token-logprob-research">P7 token-logprob research</h2>
+<p>P7’s <code>collect</code> subcommand bypasses ScreamingFace and calls an OpenAI-compatible endpoint directly. It requires:</p>
+<ul>
+<li>A problems JSONL file with <code>id</code> and <code>prompt</code> fields.</li>
+<li>A gold-answer JSON object mapping IDs to answers.</li>
+<li><code>OPENROUTER_API_KEY</code>, which the current implementation reads even when <code>--base-url</code> is supplied.</li>
+<li>A provider/model combination that actually returns token logprobs.</li>
+</ul>
+<p>Collection appends to <code>results/p7_traces.jsonl</code> by default, so repeating it can duplicate samples. Once valid traces exist, analyze them with:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python xp/p7_confidence_filtered_vote.py analyze <span class="at">--traces</span> results/p7_traces.jsonl <span class="at">--window</span> 2048</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This external analysis and the verbalized-confidence proxy answer different questions; report them separately. Synthetic assertions embedded in the scripts are implementation checks, not empirical benchmark findings.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/tkukurin\.github\.io\/gestaltface\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

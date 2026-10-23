@@ -1,58 +1,135 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
+    "objectID": "lmstudio.html",
+    "href": "lmstudio.html",
     "title": "Local LM Studio Evaluation",
     "section": "",
-    "text": "This report documents the local evaluation pipeline from xp/lmstudio_eval.py. It connects a local LM Studio inference server (http://127.0.0.1:1234/v1) with the ScreamingFace evaluation runtime to benchmark local models and compound pipelines on tasks such as medxpert."
+    "text": "This walkthrough documents the local smoke test in xp/lmstudio_eval.py. It connects a local LM Studio inference server (http://127.0.0.1:1234/v1) with the ScreamingFace evaluation runtime on medxpert. The script defaults to one question and the solo candidate only; it is a connectivity check, not an accuracy comparison. For the broader research scripts, see the experiment guide."
   },
   {
-    "objectID": "index.html#overview",
-    "href": "index.html#overview",
+    "objectID": "lmstudio.html#overview",
+    "href": "lmstudio.html#overview",
     "title": "Local LM Studio Evaluation",
     "section": "",
-    "text": "This report documents the local evaluation pipeline from xp/lmstudio_eval.py. It connects a local LM Studio inference server (http://127.0.0.1:1234/v1) with the ScreamingFace evaluation runtime to benchmark local models and compound pipelines on tasks such as medxpert."
+    "text": "This walkthrough documents the local smoke test in xp/lmstudio_eval.py. It connects a local LM Studio inference server (http://127.0.0.1:1234/v1) with the ScreamingFace evaluation runtime on medxpert. The script defaults to one question and the solo candidate only; it is a connectivity check, not an accuracy comparison. For the broader research scripts, see the experiment guide."
   },
   {
-    "objectID": "index.html#environment-server-setup",
-    "href": "index.html#environment-server-setup",
+    "objectID": "lmstudio.html#environment-server-setup",
+    "href": "lmstudio.html#environment-server-setup",
     "title": "Local LM Studio Evaluation",
     "section": "2 Environment & Server Setup",
-    "text": "2 Environment & Server Setup\nBefore running evaluations, ensure both the LM Studio server and ScreamingFace local stack are running:\n# Terminal 1: ScreamingFace local runtime\nscreamingface prepare medxpert\nscreamingface up\nExport the gateway and engine endpoints if not using default ports:\nexport SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108\nexport SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106"
+    "text": "2 Environment & Server Setup\nSync the project environment with uv sync --extra dev. Start the LM Studio server with a model loaded, then prepare the benchmark and start ScreamingFace with its local-model overlay enabled:\nuv run screamingface prepare medxpert\nAIGW_LOCAL_ENABLED=true uv run screamingface up\nIf the stack is already running, use AIGW_LOCAL_ENABLED=true uv run screamingface restart to apply the changed Gateway setting. Set the SDK’s Engine and Scoreboard endpoints in the shell used for evaluation:\nexport SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108\nexport SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106"
   },
   {
-    "objectID": "index.html#model-discovery-selection",
-    "href": "index.html#model-discovery-selection",
+    "objectID": "lmstudio.html#model-discovery-selection",
+    "href": "lmstudio.html#model-discovery-selection",
     "title": "Local LM Studio Evaluation",
     "section": "3 Model Discovery & Selection",
     "text": "3 Model Discovery & Selection\nThe script discovers local models exposed through the ScreamingFace overlay (local/* prefix) and automatically picks the target model using fuzzy matching:\n#| eval: false\nimport screamingface as sf\nimport screamingface._environment\nfrom tk.r.openmined import common as clib\n\nscreamingface._environment.ipykernel_loaded = lambda: False\nif hasattr(sf.report.Report, \"_ipython_display_\"):\n    del sf.report.Report._ipython_display_\n\nprint(f\"screamingface {sf.__version__} ready.\")\n\n# Discover models mirrored from LM Studio (http://127.0.0.1:1234/v1/models)\nlocal_models = [m.id for m in sf.models.list() if m.id.startswith(\"local/\")]\nassert local_models, \"expect lmstudio + ScreamingFace w/ AIGW_LOCAL_ENABLED=true.\"\n\nACTIVE_MODEL = \"local/google/gemma-4-e4b\"\nclosest = clib.closestname(ACTIVE_MODEL, local_models)\nACTIVE_MODEL = closest[0]\nprint(f\"Using active model: {ACTIVE_MODEL}\")"
   },
   {
-    "objectID": "index.html#candidate-architectures",
-    "href": "index.html#candidate-architectures",
+    "objectID": "lmstudio.html#candidate-architectures",
+    "href": "lmstudio.html#candidate-architectures",
     "title": "Local LM Studio Evaluation",
     "section": "4 Candidate Architectures",
     "text": "4 Candidate Architectures\nWe define two candidate approaches to compare single-model generation against multi-pass refinement:\n\n4.1 Recipe 1: Solo Local Model\nDirect generation using the selected local model:\n#| eval: false\nsolo = sf.Model(ACTIVE_MODEL, name=\"solo-local\")\n\n\n4.2 Recipe 2: Two-Pass Self-Refinement Chain\nA pipeline where the first pass drafts an initial answer, and a second pass reviews and verifies it:\n#| eval: false\nchain = sf.Pipeline(\n    [\n        sf.Model(ACTIVE_MODEL, name=\"draft\"),\n        sf.Model(\n            ACTIVE_MODEL,\n            prompt=\"Review and verify this medical answer:\\n\\n{context}\\n\\nFinal answer:\",\n        ),\n    ],\n    name=\"local-refine-chain\",\n)"
   },
   {
-    "objectID": "index.html#benchmark-execution",
-    "href": "index.html#benchmark-execution",
+    "objectID": "lmstudio.html#benchmark-execution",
+    "href": "lmstudio.html#benchmark-execution",
     "title": "Local LM Studio Evaluation",
     "section": "5 Benchmark Execution",
     "text": "5 Benchmark Execution\nEvaluations are triggered via sf.evaluate:\n#| eval: false\nBENCHMARK = \"medxpert\"\nLIMIT = 1\n\ncandidates = [solo]  # Add `chain` to benchmark multi-pass refinement\n\nprint(f\"Running evaluation on {BENCHMARK=} (limit={LIMIT})...\")\nreport = sf.evaluate(candidates, benchmark=BENCHMARK, limit=LIMIT)"
   },
   {
-    "objectID": "index.html#results-output-inspection",
-    "href": "index.html#results-output-inspection",
+    "objectID": "lmstudio.html#results-output-inspection",
+    "href": "lmstudio.html#results-output-inspection",
     "title": "Local LM Studio Evaluation",
     "section": "6 Results & Output Inspection",
-    "text": "6 Results & Output Inspection\nThe benchmark outputs candidate scores, costs, and individual test cases:\n#| eval: false\nprint(\"\\n\" + \"=\" * 60)\nprint(f\"{'Candidate':&lt;30} | {'Score':^10} | {'Cost':^12}\")\nprint(\"-\" * 60)\nfor c in report.candidates:\n    score = f\"{c.score:.3f}\" if c.score is not None else \"N/A\"\n    cost = \"$0.00 (local)\"\n    print(f\"{c.name:&lt;30} | {score:^10} | {cost:^12}\")\nprint(\"=\" * 60)\n\nfor candidate in report.candidates:\n    print(f\"\\nOutputs for {candidate.name}:\")\n    for case in candidate.cases:\n        score = case.grade.score if case.grade else 0.0\n        status = \"PASS\" if score and score &gt; 0 else \"FAIL\"\n        clean_output = (case.output or \"\").strip().replace(\"\\n\", \" \")[:120]\n        print(f\"  [Case {case.case_id}] {status} (score={score}): {clean_output}...\")\n\n6.1 Sample Output\n============================================================\nCandidate                      |   Score    |     Cost\n------------------------------------------------------------\nsolo-local                     |   0.000    | $0.00 (local)\n============================================================\n\nOutputs for solo-local:\n  [Case 1] FAIL (score=0.0): The correct answer is **(H)**..."
+    "text": "6 Results & Output Inspection\nThe benchmark outputs candidate scores, costs, and individual test cases:\n#| eval: false\nprint(\"\\n\" + \"=\" * 60)\nprint(f\"{'Candidate':&lt;30} | {'Score':^10} | {'Cost':^12}\")\nprint(\"-\" * 60)\nfor c in report.candidates:\n    score = f\"{c.score:.3f}\" if c.score is not None else \"N/A\"\n    cost = \"$0.00 (local)\"\n    print(f\"{c.name:&lt;30} | {score:^10} | {cost:^12}\")\nprint(\"=\" * 60)\n\nfor candidate in report.candidates:\n    print(f\"\\nOutputs for {candidate.name}:\")\n    for case in candidate.cases:\n        score = case.grade.score if case.grade else 0.0\n        status = \"PASS\" if score and score &gt; 0 else \"FAIL\"\n        clean_output = (case.output or \"\").strip().replace(\"\\n\", \" \")[:120]\n        print(f\"  [Case {case.case_id}] {status} (score={score}): {clean_output}...\")\n\n6.1 Sample Output\nIllustrative one-question output from the original walkthrough, not a current benchmark result or a measured accuracy estimate. The script’s $0.00 (local) label is hardcoded; it does not account for local hardware or energy costs.\n============================================================\nCandidate                      |   Score    |     Cost\n------------------------------------------------------------\nsolo-local                     |   0.000    | $0.00 (local)\n============================================================\n\nOutputs for solo-local:\n  [Case 1] FAIL (score=0.0): The correct answer is **(H)**..."
   },
   {
-    "objectID": "index.html#reproducing-locally",
-    "href": "index.html#reproducing-locally",
+    "objectID": "lmstudio.html#reproducing-locally",
+    "href": "lmstudio.html#reproducing-locally",
     "title": "Local LM Studio Evaluation",
     "section": "7 Reproducing Locally",
-    "text": "7 Reproducing Locally\nRun the experiment directly with uv:\nuv run python xp/lmstudio_eval.py\nTo re-render this Quarto documentation:\nquarto render docs"
+    "text": "7 Reproducing Locally\nRun the smoke test directly with uv. The active model name, benchmark, limit, and candidate list are configured in the script rather than through CLI flags:\nuv run python xp/lmstudio_eval.py\nAll code blocks on this page are display-only. To re-render the site without running the evaluation:\nquarto render docs"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Ensembles and Routing",
+    "section": "",
+    "text": "For a given cost or latency, what’s the best accuracy anyone can reach — and which method and combination of models gets there?\n\nThis repository explores single-model baselines, repeated-sample voting, Mixture-of-Agents, confidence-based cascades, and learned routing using ScreamingFace.\nThe current scripts primarily compare accuracy and per-question generation cost. They do not yet establish a latency frontier. Collection runs evaluate candidates through ScreamingFace; several routing and cascade studies then replay decisions over saved answers rather than executing a live adaptive policy."
+  },
+  {
+    "objectID": "index.html#research-question",
+    "href": "index.html#research-question",
+    "title": "Ensembles and Routing",
+    "section": "",
+    "text": "For a given cost or latency, what’s the best accuracy anyone can reach — and which method and combination of models gets there?\n\nThis repository explores single-model baselines, repeated-sample voting, Mixture-of-Agents, confidence-based cascades, and learned routing using ScreamingFace.\nThe current scripts primarily compare accuracy and per-question generation cost. They do not yet establish a latency frontier. Collection runs evaluate candidates through ScreamingFace; several routing and cascade studies then replay decisions over saved answers rather than executing a live adaptive policy."
+  },
+  {
+    "objectID": "index.html#start-here",
+    "href": "index.html#start-here",
+    "title": "Ensembles and Routing",
+    "section": "Start here",
+    "text": "Start here\n\nExperiment guide: what P1–P7 implement, how to inspect a run without spending money, and how to collect and analyze results.\nLocal LM Studio evaluation: a one-question smoke test for connecting local inference to ScreamingFace.\nRepository and setup notes: dependencies, runtime setup, and source code."
+  },
+  {
+    "objectID": "index.html#status-and-evidence",
+    "href": "index.html#status-and-evidence",
+    "title": "Ensembles and Routing",
+    "section": "Status and evidence",
+    "text": "Status and evidence\nThe experiment scripts are implementations and prototypes, not a published results report. No experiment CSVs are present in this checkout’s results/ or xp/results/ directories. Those directories are ignored by Git, so their absence does not establish whether experiments ran elsewhere.\nThe LM Studio walkthrough includes illustrative output from a one-question smoke test, not an accuracy estimate. P6 still needs a verified image benchmark; P7 separates external token-logprob research from its ScreamingFace verbalized-confidence proxy. See the experiment guide for these limitations."
+  },
+  {
+    "objectID": "index.html#updating-this-site",
+    "href": "index.html#updating-this-site",
+    "title": "Ensembles and Routing",
+    "section": "Updating this site",
+    "text": "Updating this site\nEdit the .qmd source pages and docs/_quarto.yml, then run from the repository root:\nquarto render docs\nFor an interactive preview:\nquarto preview docs\nQuarto is installed separately from the Python project. The site renders into docs/ itself (output-dir: .), not docs/_site/. Generated HTML, search metadata, and site_libs/ are tracked alongside the sources; include their changes when publishing a documentation update. Do not edit the generated HTML directly.\nCode examples are display-only Markdown fences, so rendering this site does not run experiments, require an inference server, or make model API calls."
+  },
+  {
+    "objectID": "experiments.html",
+    "href": "experiments.html",
+    "title": "Experiment Guide",
+    "section": "",
+    "text": "The numbered studies are independent collectors, not a pipeline that must be run in order. Source links below point to the repository; new local scripts must also be committed before those links are available on GitHub.\n\n\n\nStudy\nSource\nImplemented comparison\nImportant qualification\n\n\n\n\nP1: MoA vs Self-MoA\n2610_moa_vs_selfmoa.py\nSolo models, repeated-sample voting, and mixed-model voting; optional single- and two-layer synthesis.\nDefault runs voting baselines only. Add --fusion for MoA/Self-MoA; --no-layered skips two-layer MoA. “Best” is the configured frontier model, and “equal-spend” pairs are nearest-cost comparisons, not strictly matched budgets.\n\n\nP2: cascade signals\n2610_cascade_signals.py\nStage solos, confidence-prompt controls, cheap voting, then offline confidence/agreement cascades and optional frozen routers.\nRouting is replayed over cached answers. Signals are verbalized confidence, self-agreement, and cross-model agreement, not token logprobs. Thresholds use a dev split, but the accuracy target uses held-out frontier accuracy.\n\n\nP3: voting curves\np3_voting_curves.py\nSeeded samples, simulated plurality curves, difficulty slices, adaptive stopping, and live votes at N=3 and N=9.\nReports tables, not a plot. Resampling bands reflect available seeds rather than question-level uncertainty. Model support for seeded sampling must be checked.\n\n\nP4: RouteLLM transfer\np4_routellm_transfer.py\nStrong/weak solos with frozen-router threshold sweeps, APGR, and an oracle comparison.\nOffline replay; consumes its own strong/weak candidates, not P2’s stage-named outputs.\n\n\nP5: kNN routing robustness\np5_knn_routing_robustness.py\nMulti-model, multi-benchmark collection, kNN routing, leave-one-benchmark-out transfer, and paraphrase stability.\nMultiple benchmarks are needed for out-of-domain analysis. The in-domain split pools benchmark-qualified question IDs; paraphrase stability includes training and test IDs.\n\n\nP6: multimodal routing\np6_multimodal_routing.py\nVision solos, voting, describe-then-reason, and offline routing by image type.\nPrototype: inspect-mmmu is a placeholder, not a verified available benchmark. A real image benchmark and image-capable routes are prerequisites.\n\n\nP7: confidence-filtered voting\np7_confidence_filtered_vote.py\nExternal token-logprob collection and DeepConf-style analysis; separate ScreamingFace verbalized-confidence proxy.\nThe proxy is not token-logprob DeepConf. External collection is research-only, not a ScreamingFace leaderboard result."
+  },
+  {
+    "objectID": "experiments.html#experiment-inventory",
+    "href": "experiments.html#experiment-inventory",
+    "title": "Experiment Guide",
+    "section": "",
+    "text": "The numbered studies are independent collectors, not a pipeline that must be run in order. Source links below point to the repository; new local scripts must also be committed before those links are available on GitHub.\n\n\n\nStudy\nSource\nImplemented comparison\nImportant qualification\n\n\n\n\nP1: MoA vs Self-MoA\n2610_moa_vs_selfmoa.py\nSolo models, repeated-sample voting, and mixed-model voting; optional single- and two-layer synthesis.\nDefault runs voting baselines only. Add --fusion for MoA/Self-MoA; --no-layered skips two-layer MoA. “Best” is the configured frontier model, and “equal-spend” pairs are nearest-cost comparisons, not strictly matched budgets.\n\n\nP2: cascade signals\n2610_cascade_signals.py\nStage solos, confidence-prompt controls, cheap voting, then offline confidence/agreement cascades and optional frozen routers.\nRouting is replayed over cached answers. Signals are verbalized confidence, self-agreement, and cross-model agreement, not token logprobs. Thresholds use a dev split, but the accuracy target uses held-out frontier accuracy.\n\n\nP3: voting curves\np3_voting_curves.py\nSeeded samples, simulated plurality curves, difficulty slices, adaptive stopping, and live votes at N=3 and N=9.\nReports tables, not a plot. Resampling bands reflect available seeds rather than question-level uncertainty. Model support for seeded sampling must be checked.\n\n\nP4: RouteLLM transfer\np4_routellm_transfer.py\nStrong/weak solos with frozen-router threshold sweeps, APGR, and an oracle comparison.\nOffline replay; consumes its own strong/weak candidates, not P2’s stage-named outputs.\n\n\nP5: kNN routing robustness\np5_knn_routing_robustness.py\nMulti-model, multi-benchmark collection, kNN routing, leave-one-benchmark-out transfer, and paraphrase stability.\nMultiple benchmarks are needed for out-of-domain analysis. The in-domain split pools benchmark-qualified question IDs; paraphrase stability includes training and test IDs.\n\n\nP6: multimodal routing\np6_multimodal_routing.py\nVision solos, voting, describe-then-reason, and offline routing by image type.\nPrototype: inspect-mmmu is a placeholder, not a verified available benchmark. A real image benchmark and image-capable routes are prerequisites.\n\n\nP7: confidence-filtered voting\np7_confidence_filtered_vote.py\nExternal token-logprob collection and DeepConf-style analysis; separate ScreamingFace verbalized-confidence proxy.\nThe proxy is not token-logprob DeepConf. External collection is research-only, not a ScreamingFace leaderboard result."
+  },
+  {
+    "objectID": "experiments.html#environment-and-runtime",
+    "href": "experiments.html#environment-and-runtime",
+    "title": "Experiment Guide",
+    "section": "Environment and runtime",
+    "text": "Environment and runtime\nRun commands from the repository root so exports land in the expected results/ directory. Install the project dependencies first:\nuv sync --extra dev\nPython must satisfy the range in pyproject.toml (currently &gt;=3.12,&lt;3.15). Model routes, token limits, and cost assumptions live in src/tk/r/openmined/common.py. Confirm that your Engine serves the selected routes and benchmark before a live run; the scripts check these before evaluation.\nFor the normal local runtime, prepare the intended benchmark and start the stack. For example, P1’s default benchmark can be prepared with:\nuv run python -m screamingface_engine.benchmarks.prepare \\\n  --root ~/.screamingface/benchmark-assets \\\n  --bundle inspect-lab_bench_litqa\nuv run screamingface up\nIf the stack is already running, use uv run screamingface restart to apply changed Gateway settings. The normal launcher supplies the prepared benchmark assets to the Engine. Set the SDK endpoints in the shell used for experiments:\nexport SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108\nexport SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106\nRemote routes need a connected provider and valid credentials. Live runs send benchmark prompts to the selected providers and can incur charges. Keep API keys out of source files and published reports. Prepared benchmarks, served routes, free-model availability, and provider parameter support can change independently of these scripts.\nP1 and P2 support --free, but the normal Engine does not necessarily declare both free routes. The custom configuration is xp/gemma-free.toml; the setup notes at the top of xp/tktest.py describe a separate Engine on port 9109. Gateway model IDs use :free, while Engine route IDs use ~free. Do not run tktest.py as a setup command: its top-level code makes network calls and evaluates a model."
+  },
+  {
+    "objectID": "experiments.html#inspect-a-plan-without-evaluating",
+    "href": "experiments.html#inspect-a-plan-without-evaluating",
+    "title": "Experiment Guide",
+    "section": "Inspect a plan without evaluating",
+    "text": "Inspect a plan without evaluating\nThese commands take the dry-run branches, which do not contact the Engine or run inference. Cost estimates are rough planning aids, not spend caps. Dry-run success does not verify that a route or benchmark exists.\nuv run python xp/2610_moa_vs_selfmoa.py --benchmark inspect-lab_bench_litqa --limit 5 --k 3 --fusion --dry-run\nuv run python xp/2610_cascade_signals.py --benchmark inspect-mmlu_pro --limit 5 --dry-run\nuv run python xp/p3_voting_curves.py --benchmark inspect-mmlu_pro --limit 5 --tiers cheap frontier --dry-run\nuv run python xp/p4_routellm_transfer.py --benchmark inspect-mmlu_pro --limit 5 --routers bert random --dry-run\nuv run python xp/p5_knn_routing_robustness.py --limit 5 --paraphrase-limit 5 --dry-run\nuv run python xp/p6_multimodal_routing.py --dry-run\nuv run python xp/p7_confidence_filtered_vote.py proxy --benchmark inspect-aime25 --n 8 --threshold 0.6 --dry-run\nP6 remains a plan preview until its benchmark and routes are verified. P7’s proxy has no --limit option; removing its --dry-run can evaluate the full benchmark. The parsers use parse_known_args(), so an unsupported option may be silently ignored rather than rejected."
+  },
+  {
+    "objectID": "experiments.html#collect-and-analyze",
+    "href": "experiments.html#collect-and-analyze",
+    "title": "Experiment Guide",
+    "section": "Collect and analyze",
+    "text": "Collect and analyze\nAfter checking the plan and runtime, explicitly remove --dry-run to collect. For example, a small P1 run with synthesis enabled is:\nuv run python xp/2610_moa_vs_selfmoa.py --benchmark inspect-lab_bench_litqa --limit 5 --k 3 --fusion\nShared collection exports both a full report and per-case rows:\n\nresults/&lt;tag&gt;.report.json: the ScreamingFace report.\nresults/&lt;tag&gt;.csv: candidate, case ID, score, generation cost, output, input, and abstention status.\n\nTags start with p1_ through p6_, or p7_proxy_, and include the benchmark. These filenames are deterministic: repeating a run with the same tag overwrites its exports. Archive artifacts before rerunning a configuration you want to retain. Partially failed evaluations preserve the candidates that completed when ScreamingFace returns a partial report; a saved file alone does not establish a complete comparison.\nP1–P6 support --analyze for their own saved CSVs. Quote globs so the script expands them, and keep input files benchmark-specific unless intentionally doing P5’s cross-benchmark analysis:\nuv run python xp/2610_moa_vs_selfmoa.py --analyze \"results/p1_inspect-lab_bench_litqa*.csv\"\nuv run python xp/2610_cascade_signals.py --benchmark inspect-mmlu_pro --analyze \"results/p2_inspect-mmlu_pro*.csv\" --routers bert random\nuv run python xp/p4_routellm_transfer.py --benchmark inspect-mmlu_pro --analyze \"results/p4_inspect-mmlu_pro*.csv\" --routers bert random\nuv run python xp/p5_knn_routing_robustness.py --analyze \"results/p5_*.csv\"\nPreserve relevant collection options such as --numeric and --models when analyzing. Router analysis may download checkpoints, and P5 may download sentence-transformer weights. RouteLLM’s mf router additionally needs OPENAI_API_KEY for embeddings; cached-answer analysis is not necessarily network-free.\n\nCost interpretation\nThe shared exporter excludes grading from generation cost and keeps unknown costs as unknown. For configured routes, a zero-dollar call with known token usage (such as a free route or cache hit) is repriced using PRICES to estimate cold-call cost. Consequently, plotted cost is not necessarily the amount billed. See common.py for the current rates and extraction rules.\nThe scripts do not provide a complete end-to-end latency accounting protocol. Do not interpret offline cost curves as measured serving latency."
+  },
+  {
+    "objectID": "experiments.html#p7-token-logprob-research",
+    "href": "experiments.html#p7-token-logprob-research",
+    "title": "Experiment Guide",
+    "section": "P7 token-logprob research",
+    "text": "P7 token-logprob research\nP7’s collect subcommand bypasses ScreamingFace and calls an OpenAI-compatible endpoint directly. It requires:\n\nA problems JSONL file with id and prompt fields.\nA gold-answer JSON object mapping IDs to answers.\nOPENROUTER_API_KEY, which the current implementation reads even when --base-url is supplied.\nA provider/model combination that actually returns token logprobs.\n\nCollection appends to results/p7_traces.jsonl by default, so repeating it can duplicate samples. Once valid traces exist, analyze them with:\nuv run python xp/p7_confidence_filtered_vote.py analyze --traces results/p7_traces.jsonl --window 2048\nThis external analysis and the verbalized-confidence proxy answer different questions; report them separately. Synthetic assertions embedded in the scripts are implementation checks, not empirical benchmark findings."
   }
 ]

@@ -1,0 +1,113 @@
+---
+title: "Experiment Guide"
+subtitle: "Current implementations, safe previews, and saved-result analysis"
+---
+
+## Experiment inventory
+
+The numbered studies are independent collectors, not a pipeline that must be run in order. Source links below point to the repository; new local scripts must also be committed before those links are available on GitHub.
+
+| Study | Source | Implemented comparison | Important qualification |
+|:--|:--|:--|:--|
+| P1: MoA vs Self-MoA | [`2610_moa_vs_selfmoa.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/2610_moa_vs_selfmoa.py) | Solo models, repeated-sample voting, and mixed-model voting; optional single- and two-layer synthesis. | Default runs voting baselines only. Add `--fusion` for MoA/Self-MoA; `--no-layered` skips two-layer MoA. “Best” is the configured frontier model, and “equal-spend” pairs are nearest-cost comparisons, not strictly matched budgets. |
+| P2: cascade signals | [`2610_cascade_signals.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/2610_cascade_signals.py) | Stage solos, confidence-prompt controls, cheap voting, then offline confidence/agreement cascades and optional frozen routers. | Routing is replayed over cached answers. Signals are verbalized confidence, self-agreement, and cross-model agreement, not token logprobs. Thresholds use a dev split, but the accuracy target uses held-out frontier accuracy. |
+| P3: voting curves | [`p3_voting_curves.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/p3_voting_curves.py) | Seeded samples, simulated plurality curves, difficulty slices, adaptive stopping, and live votes at N=3 and N=9. | Reports tables, not a plot. Resampling bands reflect available seeds rather than question-level uncertainty. Model support for seeded sampling must be checked. |
+| P4: RouteLLM transfer | [`p4_routellm_transfer.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/p4_routellm_transfer.py) | Strong/weak solos with frozen-router threshold sweeps, APGR, and an oracle comparison. | Offline replay; consumes its own `strong`/`weak` candidates, not P2’s stage-named outputs. |
+| P5: kNN routing robustness | [`p5_knn_routing_robustness.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/p5_knn_routing_robustness.py) | Multi-model, multi-benchmark collection, kNN routing, leave-one-benchmark-out transfer, and paraphrase stability. | Multiple benchmarks are needed for out-of-domain analysis. The in-domain split pools benchmark-qualified question IDs; paraphrase stability includes training and test IDs. |
+| P6: multimodal routing | [`p6_multimodal_routing.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/p6_multimodal_routing.py) | Vision solos, voting, describe-then-reason, and offline routing by image type. | Prototype: `inspect-mmmu` is a placeholder, not a verified available benchmark. A real image benchmark and image-capable routes are prerequisites. |
+| P7: confidence-filtered voting | [`p7_confidence_filtered_vote.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/p7_confidence_filtered_vote.py) | External token-logprob collection and DeepConf-style analysis; separate ScreamingFace verbalized-confidence proxy. | The proxy is not token-logprob DeepConf. External collection is research-only, not a ScreamingFace leaderboard result. |
+
+## Environment and runtime
+
+Run commands from the repository root so exports land in the expected `results/` directory. Install the project dependencies first:
+
+```bash
+uv sync --extra dev
+```
+
+Python must satisfy the range in `pyproject.toml` (currently `>=3.12,<3.15`). Model routes, token limits, and cost assumptions live in [`src/tk/r/openmined/common.py`](https://github.com/tkukurin/gestaltface/blob/main/src/tk/r/openmined/common.py). Confirm that your Engine serves the selected routes and benchmark before a live run; the scripts check these before evaluation.
+
+For the normal local runtime, prepare the intended benchmark and start the stack. For example, P1’s default benchmark can be prepared with:
+
+```bash
+uv run python -m screamingface_engine.benchmarks.prepare \
+  --root ~/.screamingface/benchmark-assets \
+  --bundle inspect-lab_bench_litqa
+uv run screamingface up
+```
+
+If the stack is already running, use `uv run screamingface restart` to apply changed Gateway settings. The normal launcher supplies the prepared benchmark assets to the Engine. Set the SDK endpoints in the shell used for experiments:
+
+```bash
+export SCREAMINGFACE_ENGINE_URL=http://127.0.0.1:9108
+export SCREAMINGFACE_SCOREBOARD_URL=http://127.0.0.1:9106
+```
+
+Remote routes need a connected provider and valid credentials. **Live runs send benchmark prompts to the selected providers and can incur charges.** Keep API keys out of source files and published reports. Prepared benchmarks, served routes, free-model availability, and provider parameter support can change independently of these scripts.
+
+P1 and P2 support `--free`, but the normal Engine does not necessarily declare both free routes. The custom configuration is [`xp/gemma-free.toml`](https://github.com/tkukurin/gestaltface/blob/main/xp/gemma-free.toml); the setup notes at the top of [`xp/tktest.py`](https://github.com/tkukurin/gestaltface/blob/main/xp/tktest.py) describe a separate Engine on port **9109**. Gateway model IDs use `:free`, while Engine route IDs use `~free`. Do not run `tktest.py` as a setup command: its top-level code makes network calls and evaluates a model.
+
+## Inspect a plan without evaluating
+
+These commands take the dry-run branches, which do not contact the Engine or run inference. Cost estimates are rough planning aids, not spend caps. Dry-run success does not verify that a route or benchmark exists.
+
+```bash
+uv run python xp/2610_moa_vs_selfmoa.py --benchmark inspect-lab_bench_litqa --limit 5 --k 3 --fusion --dry-run
+uv run python xp/2610_cascade_signals.py --benchmark inspect-mmlu_pro --limit 5 --dry-run
+uv run python xp/p3_voting_curves.py --benchmark inspect-mmlu_pro --limit 5 --tiers cheap frontier --dry-run
+uv run python xp/p4_routellm_transfer.py --benchmark inspect-mmlu_pro --limit 5 --routers bert random --dry-run
+uv run python xp/p5_knn_routing_robustness.py --limit 5 --paraphrase-limit 5 --dry-run
+uv run python xp/p6_multimodal_routing.py --dry-run
+uv run python xp/p7_confidence_filtered_vote.py proxy --benchmark inspect-aime25 --n 8 --threshold 0.6 --dry-run
+```
+
+P6 remains a plan preview until its benchmark and routes are verified. P7’s proxy has no `--limit` option; removing its `--dry-run` can evaluate the full benchmark. The parsers use `parse_known_args()`, so an unsupported option may be silently ignored rather than rejected.
+
+## Collect and analyze
+
+After checking the plan and runtime, explicitly remove `--dry-run` to collect. For example, a small P1 run with synthesis enabled is:
+
+```bash
+uv run python xp/2610_moa_vs_selfmoa.py --benchmark inspect-lab_bench_litqa --limit 5 --k 3 --fusion
+```
+
+Shared collection exports both a full report and per-case rows:
+
+- `results/<tag>.report.json`: the ScreamingFace report.
+- `results/<tag>.csv`: candidate, case ID, score, generation cost, output, input, and abstention status.
+
+Tags start with `p1_` through `p6_`, or `p7_proxy_`, and include the benchmark. These filenames are deterministic: repeating a run with the same tag overwrites its exports. Archive artifacts before rerunning a configuration you want to retain. Partially failed evaluations preserve the candidates that completed when ScreamingFace returns a partial report; a saved file alone does not establish a complete comparison.
+
+P1–P6 support `--analyze` for their own saved CSVs. Quote globs so the script expands them, and keep input files benchmark-specific unless intentionally doing P5’s cross-benchmark analysis:
+
+```bash
+uv run python xp/2610_moa_vs_selfmoa.py --analyze "results/p1_inspect-lab_bench_litqa*.csv"
+uv run python xp/2610_cascade_signals.py --benchmark inspect-mmlu_pro --analyze "results/p2_inspect-mmlu_pro*.csv" --routers bert random
+uv run python xp/p4_routellm_transfer.py --benchmark inspect-mmlu_pro --analyze "results/p4_inspect-mmlu_pro*.csv" --routers bert random
+uv run python xp/p5_knn_routing_robustness.py --analyze "results/p5_*.csv"
+```
+
+Preserve relevant collection options such as `--numeric` and `--models` when analyzing. Router analysis may download checkpoints, and P5 may download sentence-transformer weights. RouteLLM’s `mf` router additionally needs `OPENAI_API_KEY` for embeddings; cached-answer analysis is not necessarily network-free.
+
+### Cost interpretation
+
+The shared exporter excludes grading from generation cost and keeps unknown costs as unknown. For configured routes, a zero-dollar call with known token usage (such as a free route or cache hit) is repriced using `PRICES` to estimate cold-call cost. Consequently, plotted cost is not necessarily the amount billed. See `common.py` for the current rates and extraction rules.
+
+The scripts do not provide a complete end-to-end latency accounting protocol. Do not interpret offline cost curves as measured serving latency.
+
+## P7 token-logprob research
+
+P7’s `collect` subcommand bypasses ScreamingFace and calls an OpenAI-compatible endpoint directly. It requires:
+
+- A problems JSONL file with `id` and `prompt` fields.
+- A gold-answer JSON object mapping IDs to answers.
+- `OPENROUTER_API_KEY`, which the current implementation reads even when `--base-url` is supplied.
+- A provider/model combination that actually returns token logprobs.
+
+Collection appends to `results/p7_traces.jsonl` by default, so repeating it can duplicate samples. Once valid traces exist, analyze them with:
+
+```bash
+uv run python xp/p7_confidence_filtered_vote.py analyze --traces results/p7_traces.jsonl --window 2048
+```
+
+This external analysis and the verbalized-confidence proxy answer different questions; report them separately. Synthetic assertions embedded in the scripts are implementation checks, not empirical benchmark findings.

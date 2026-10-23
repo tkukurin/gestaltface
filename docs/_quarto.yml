@@ -8,8 +8,12 @@ website:
   navbar:
     title: "Gestaltface"
     left:
-      - text: "LM Studio Eval"
+      - text: "Overview"
         file: index.qmd
+      - text: "Experiments"
+        file: experiments.qmd
+      - text: "LM Studio Eval"
+        file: lmstudio.qmd
 
 format:
   html:

@@ -6,10 +6,10 @@ The API seems in flux expect changes rather quickly.
 
 from __future__ import annotations
 
-import screamingface as sf
-
 import csv
+import difflib
 import hashlib
+import json
 import math
 import random
 import re
@@ -17,24 +17,47 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
-import difflib
+
+import screamingface as sf
+from tqdm import tqdm
 
 POOL: dict[str, str] = {
     "cheap": "openrouter/google/gemini-3-flash-preview",
-    "cheap_b": "openrouter/meta-llama/llama-4-maverick",
-    "mid": "openrouter/anthropic/claude-sonnet-5",
+    "cheap_b": "openrouter/deepseek/deepseek-v4-flash",  # llama-4-maverick is not served
+    "mid": "openrouter/anthropic/claude-sonnet-5",  # takes no seed
     "frontier": "openrouter/openai/gpt-5.5",
     "frontier_b": "openrouter/anthropic/claude-opus-4.8",
     "frontier_c": "openrouter/google/gemini-3.1-pro-preview",
 }
 
-PRICES: dict[str, tuple[float, float]] = {  # openrouter estimate_cost()  $/1M
+# $0 OpenRouter models; `bin/stack.py up` declares gemma, the compiled Engine world lacks it
+FREE: dict[str, str] = {
+    "cheap": "openrouter/liquid/lfm-2.5-2.6b~free",
+    "frontier": "openrouter/google/gemma-4-31b-it~free",
+}
+
+PRICES: dict[str, tuple[float, float]] = {  # openrouter catalogue 2026-10-23, $/1M
     POOL["cheap"]: (0.50, 3.00),
-    POOL["cheap_b"]: (0.19, 0.65),
+    POOL["cheap_b"]: (0.091, 0.182),
     POOL["mid"]: (2.00, 10.00),
     POOL["frontier"]: (5.00, 30.00),
     POOL["frontier_b"]: (5.00, 25.00),
     POOL["frontier_c"]: (2.00, 12.00),
+    # free routes bill $0: price them like their paid twins so cost curves mean something
+    FREE["cheap"]: (0.04, 0.05),  # no paid twin; google/gemma-3-4b-it rates
+    FREE["frontier"]: (0.20, 0.40),  # google/gemma-4-31b-it
+}
+
+# Engine default asks for 65536 tokens (402 on a low balance); reasoning can eat the whole cap.
+PARAMS: dict[str, dict[str, str | int | float | bool]] = {
+    **{r: {"max_tokens": 4096} for r in [*POOL.values(), FREE["cheap"]]},  # lfm: reasoning is mandatory
+    FREE["frontier"]: {"max_tokens": 4096, "reasoning.effort": "none"},
+}
+
+ROUTELLM = {  # released checkpoints: Arena + GPT-4-judge labels
+    "bert": "routellm/bert_gpt4_augmented",
+    "mf": "routellm/mf_gpt4_augmented",  # needs OPENAI_API_KEY for embeddings
+    "causal_llm": "routellm/causal_llm_gpt4_augmented",  # Llama-3-8B: needs a GPU
 }
 
 RESULTS = Path("results")
@@ -113,7 +136,7 @@ def check_routes(routes: Iterable[str]) -> list[str]:
 def check_benchmark(benchmark_id: str) -> bool:
     ids = {b.id for b in sf.benchmarks.list()}
     if benchmark_id not in ids:
-        print(f"  ! benchmark {benchmark_id!r} is not in this Engine's catalogue")
+        print(f"  ! {benchmark_id=} not in this Engine's catalogue:\n {sf.benchmarks.list()}")
         return False
     return True
 
@@ -121,7 +144,8 @@ def check_benchmark(benchmark_id: str) -> bool:
 def _case_costs(candidate) -> dict[str, float | None]:
     """Per-question spend from the accounting breakdown, grading rows excluded.
 
-    Exact-only, like the Engine: one unknown row makes that question's cost unknown."""
+    Exact-only, like the Engine: one unknown row makes that question's cost unknown.
+    A $0 call (free route, cache hit) on a PRICES route is priced from its tokens: cold cost."""
     totals: dict[str, float] = defaultdict(float)
     unknown: set[str] = set()
     try: acc_rows = candidate.accounting.rows
@@ -129,7 +153,10 @@ def _case_costs(candidate) -> dict[str, float | None]:
     for row in acc_rows:
         if row.stage == "grading": continue
         cid = str(row.case_id)
-        cost = None if row.accounting is None else row.accounting.usage.cost_usd
+        u = None if row.accounting is None else row.accounting.usage
+        cost = None if u is None else u.cost_usd
+        if u and not cost and (p := PRICES.get(row.model)) and None not in (u.input_tokens, u.output_tokens):
+            cost = (u.input_tokens * p[0] + u.output_tokens * p[1]) / 1e6
         if cost is None: unknown.add(cid)
         else: totals[cid] += float(cost)
     out: dict[str, float | None] = {cid: v for cid, v in totals.items()}
@@ -162,16 +189,21 @@ def test_report_extract_rows_roundtrips_costs() -> None:
     import tempfile
     from types import SimpleNamespace
 
-    acc = lambda stage, cid, cost: SimpleNamespace(stage=stage, case_id=cid, accounting=SimpleNamespace(usage=SimpleNamespace(cost_usd=cost)))
+    usage = lambda cost: SimpleNamespace(cost_usd=cost, input_tokens=1000, output_tokens=100)
+    acc = lambda stage, cid, cost, model=None: SimpleNamespace(stage=stage, case_id=cid, model=model, accounting=SimpleNamespace(usage=usage(cost)))
     case = lambda cid, score, out: SimpleNamespace(case_id=cid, grade=SimpleNamespace(score=score), output=out, input=f"q{cid}", abstained=False)
     cand = SimpleNamespace(
         name="m",
-        cases=[case(1, 1.0, "ANSWER: A"), case(2, 0.0, "ANSWER: B")],
-        accounting=SimpleNamespace(rows=[acc("generation", 1, 0.01), acc("grading", 1, 5.0), acc("generation", 2, None)]),
+        cases=[case(1, 1.0, "ANSWER: A"), case(2, 0.0, "ANSWER: B"), case(3, 1.0, "ANSWER: C")],
+        accounting=SimpleNamespace(rows=[
+            acc("generation", 1, 0.01), acc("grading", 1, 5.0), acc("generation", 2, None),
+            acc("generation", 3, 0.0, FREE["frontier"]),
+        ]),
     )
     rows = rows_from_report(SimpleNamespace(candidates=[cand]))
     assert rows[0].cost_usd == 0.01  # grading excluded
     assert rows[1].cost_usd is None  # unknown stays unknown
+    assert abs((rows[2].cost_usd or 0) - (1000 * 0.20 + 100 * 0.40) / 1e6) < 1e-12  # free call priced
     with tempfile.TemporaryDirectory() as d:
         p = save_rows(rows, Path(d) / "x.csv")
         back = load_rows(p)
@@ -211,26 +243,19 @@ def extract_choice(text: str) -> str | None:
 
 
 def extract_number(text: str) -> str | None:
-    m = _NUM.findall(text or "")
-    if not m:
-        nums = re.findall(r"-?\d[\d,]*(?:\.\d+)?", text or "")
-        if not nums:
-            return None
+    if not (m:=_NUM.findall(text or "")):
+        if not (nums:=re.findall(r"-?\d[\d,]*(?:\.\d+)?", text or "")): return None
         m = nums
     v = m[-1].replace(",", "")
     try:
         f = float(v)
         return str(int(f)) if f.is_integer() else str(f)
-    except ValueError:
-        return None
+    except ValueError: return None
 
 
 def extract_confidence(text: str) -> float | None:
-    m = _CONF.findall(text or "")
-    if not m:
-        return None
-    v = float(m[-1])
-    return min(1.0, max(0.0, v))
+    if not (m:=_CONF.findall(text or "")): return None
+    return min(1.0, max(0.0, float(m[-1])))
 
 
 def test_response_extract_tokens_parses_outputs() -> None:
@@ -289,6 +314,77 @@ def pareto(points: Sequence[Point]) -> list[Point]:
             front.append(p)
             best = p.acc
     return front
+
+
+def headroom(weak: Mapping[str, Row], strong: Mapping[str, Row], ids: Iterable[str]) -> Point:
+    """Oracle router: the weak answer unless only the strong model is right. Not deployable."""
+    pick = [strong[c] if (strong[c].score or 0) > (weak[c].score or 0) else weak[c] for c in ids if c in weak and c in strong]
+    n = max(1, len(pick))
+    return Point("oracle", sum(r.cost_usd or 0.0 for r in pick) / n, sum(r.score or 0.0 for r in pick) / n, len(pick))
+
+
+def oracle_score(strong: Mapping[str, Row], weak: Mapping[str, Row]) -> dict[str, float]:
+    """Strong only where it is right and the weak model is wrong: the best any router can do."""
+    return {c: float((strong[c].score or 0) > (weak[c].score or 0)) for c in strong if c in weak}
+
+
+def route_curve(strong: Mapping[str, Row], weak: Mapping[str, Row], score: Mapping[str, float], ids: Iterable[str], steps: int = 50) -> list[Point]:
+    """Send the top fraction f of questions (by router score) to the strong model, f in [0, 1]."""
+    ids = [c for c in ids if c in strong and c in weak and c in score]
+    ranked = sorted(ids, key=lambda c: -score[c])
+    pts = []
+    for i in range(steps + 1):
+        f = i / steps
+        to_strong = set(ranked[: round(f * len(ranked))])
+        acc = sum((strong if c in to_strong else weak)[c].score or 0.0 for c in ids) / len(ids)
+        cost = sum((strong if c in to_strong else weak)[c].cost_usd or 0.0 for c in ids) / len(ids)
+        pts.append(Point(f"{f:.2f}", cost, acc, len(ids)))
+    return pts
+
+
+def apgr(curve: Sequence[Point]) -> float:
+    """Average performance gap recovered over strong-call fractions 0..1 (Ong et al., 2024)."""
+    weak_acc, strong_acc = curve[0].acc, curve[-1].acc
+    if abs(gap := strong_acc - weak_acc) < 1e-9:
+        return float("nan")
+    return sum((p.acc - weak_acc) / gap for p in curve) / len(curve)
+
+
+def router_scores(texts: Mapping[str, str], router: str, cache: Path = RESULTS / "routellm_scores.json") -> dict[str, float]:
+    """case_id -> frozen RouteLLM P(strong wins). Cached by question text, so benchmarks can share a file."""
+    key = lambda t: f"{router}:{hashlib.sha256(t.encode()).hexdigest()[:16]}"
+    seen = json.loads(cache.read_text()) if cache.exists() else {}
+    if todo := sorted({t for t in texts.values() if key(t) not in seen}):
+        if router == "random":
+            seen |= {key(t): random.Random(key(t)).random() for t in todo}
+        else:
+            from routellm.routers.routers import (
+                ROUTER_CLS,  # routellm 0.2.x; slow torch import
+            )
+
+            r = ROUTER_CLS[router](checkpoint_path=ROUTELLM[router])
+            seen |= {key(t): float(r.calculate_strong_win_rate(t)) for t in tqdm(todo, desc=router)}
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(seen))
+    return {cid: seen[key(t)] for cid, t in texts.items()}
+
+
+def test_routes_oracle_beats_router_beats_random() -> None:
+    rng = random.Random(2)
+    strong, weak, score = {}, {}, {}
+    for i in range(300):
+        hard = rng.random() < 0.5
+        weak[str(i)] = Row("weak", str(i), 0.0 if hard else 1.0, 0.001, "", "q")
+        strong[str(i)] = Row("strong", str(i), 1.0, 0.05, "", "q")
+        score[str(i)] = (0.8 if hard else 0.2) + rng.uniform(-0.15, 0.15)
+    curve = route_curve(strong, weak, score, strong)
+    assert abs(curve[0].acc - 0.5) < 0.1 and curve[-1].acc == 1.0
+    good = apgr(curve)
+    rand = apgr(route_curve(strong, weak, {c: rng.random() for c in strong}, strong))
+    orac = apgr(route_curve(strong, weak, oracle_score(strong, weak), strong))
+    assert orac >= good > rand and 0.35 < rand < 0.65
+    o = headroom(weak, strong, strong)
+    assert o.acc == 1.0 and o.cost < 0.6 * 0.05
 
 
 def test_points_pareto_keeps_nondominated() -> None:
